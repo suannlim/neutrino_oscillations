@@ -73,31 +73,31 @@ def noOscProb(E,mixAng,diffSqrMass,L):
 #creating an array of neutrino energy values, i take the energy as the midpoint of the bin
 E=np.arange(0.025,10,0.05)
 
-noOscillationProbValues=noOscProb(E,np.pi/4,2.4**-3,295)
-print(noOscillationProbValues)
+#finding the probability of the neutrino not decaying
+noDecayProb=noOscProb(E,np.pi/4,2.4e-3,295)
 
 #plotting probability values on a graph
 plt.figure(1)
 plt.title("Probability values wrt neutrino energy")
-plt.plot(E,noOscillationProbValues)
+plt.plot(E,noDecayProb)
 
 #now we find the oscillated event rate probability by multiplying the simulated data by the
 #probability that the neutrino will oscilalte from a muon neutrino to tau neutrino
 
 
-def oscEventRate(noOscProbVals,simData):
+def oscEventRate(noDecayProb,simData):
     EventRate=[]
-    for i in range(len(noOscProbVals)):
-        EventRate.append((1-noOscProbVals[i])*simData[i])
+    for i in range(len(noDecayProb)):
+        EventRate.append((1-noDecayProb[i])*simData[i])
     return EventRate
 
-oscEventRatePredic=oscEventRate(noOscillationProbValues,simData)
+eventRate=oscEventRate(noDecayProb,simData)
 
 plt.figure(2)
 plt.title("Oscillated event rate prediction vs energy")
 plt.xlabel("Energy/GeV")
 plt.ylabel("Oscillated event rate prediction")
-plt.plot(E,oscEventRatePredic)
+plt.plot(E,eventRate)
 
 
 #%%
@@ -108,30 +108,100 @@ def negLogLike(data,mixAng):
     likelihood=[]
 
     #set the constants
-    diffSqrMass=2.4**-3
+    diffSqrMass=2.4e-3
     L=295
     E=np.arange(0.025,10,0.05)
 
     for i in mixAng:
-        probNoOsc=noOscProb(E,i,diffSqrMass,L)
-        print(probNoOsc)
-        print(len(probNoOsc))
+        print(i)
+        noDecayProb=noOscProb(E,i,diffSqrMass,L)
+        print(noDecayProb)
         sum=0
-        for j in range(len(probNoOsc)):
-            OscillationEventRate=oscEventRate(probNoOsc,data)
+        for j in range(len(noDecayProb)):
+            OscillationEventRate=oscEventRate(noDecayProb,data)
             m=data[j]
             Lamda=OscillationEventRate[j]
             sum+=Lamda-m+(m*np.log(m/Lamda))
         likelihood.append(sum)
 
-    print(likelihood)
     return likelihood
 
 #create an array of mixing angle values
-mixAng=np.arange(np.pi/4,100,np.pi/4)
 
+mixAng=np.linspace(np.pi/32,np.pi/2,100)
 
 likelihoodVals=negLogLike(simData,mixAng)
+
+#plotting the NLL values against the mixing angle to find the approx minimum
+plt.title("Negative log likelihood with varying mixing angle")
+plt.xlabel("Mixing angle")
+plt.ylabel("Negative Log Likelihood")
+plt.plot(mixAng,likelihoodVals)
+
+
+#%%
+#3.4 Minimise
+
+def parabolicMinimiser(xVals,yVals):
+    """
+    Parabolic minimisation takes 3 points(x0,x1,x2) and fits a lagrange polynomial across
+    those points. The polynomial minimum can be found to give x3.Keep the
+    3 lowest points then repeat, eventually x3 will converge to the true
+    minimum
+    """
+    #create an array to store the points we are considering
+    xGuess=[]
+
+    #creating a dictionary between the x and y array
+    dictionary=dict(zip(xVals,yVals))
+
+    #append the first 3 points 
+    for i in range(3):
+        xGuess.append(xVals[i])
+    
+    #continue iterating until x3 changes by less than 0.001
+    diffx3=100
+
+    for x in range(100):
+        #find all relevant y values
+        y0=dictionary[xGuess[0]]
+        y1=dictionary[xGuess[1]]
+        y2=dictionary[xGuess[2]]
+
+        #break up calculation
+        numFirst=(xGuess[2]**2 - xGuess[1]**2)*y0
+        numSec=(xGuess[0]**2 - xGuess[2]**2)*y1
+        numThird=(xGuess[1]**2 - xGuess[0]**2)*y2
+        denomFirst=(xGuess[2] - xGuess[1])*y0
+        denomSec=(xGuess[0] - xGuess[2])*y1
+        denomThird=(xGuess[1] - xGuess[0])*y2
+
+        totalNum=numFirst+numSec+numThird
+        totalDenom=denomFirst+denomSec+denomThird
+
+        #finding minimum of lagrange polynomial and appending to xGuess
+        x3=0.5*(totalNum/totalDenom)
+        xGuess.append(x3)
+        print(xGuess)
+        #search through xGuess and remove the x value corresponding to the largest y
+        yNew=[]
+        for i in xGuess:
+            yNew.append(dictionary[i])
+        positionMax=yNew.index(max(yNew))
+        xGuess.remove(xGuess[positionMax])
+        print(xGuess)
+     
+        
+    print(x3)
+    return(x3)
+
+parabolicMinimiser(E,noDecayProb)
+
+#the issue is that the new value of x3 found does not correspond to a 
+#specific value of y as our x values are not continous and infinite
+
+
+
 
 
 
