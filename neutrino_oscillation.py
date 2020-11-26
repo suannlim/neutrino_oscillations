@@ -140,7 +140,7 @@ plt.plot(mixAng,likelihoodVals)
 
 
 #%%
-#3.4 Minimise
+#3.4 Minimisation
 
 def parabolicMinimiser(xVals,yVals):
     """
@@ -151,6 +151,8 @@ def parabolicMinimiser(xVals,yVals):
     """
     #create an array to store the points we are considering
     xGuess=[]
+
+
 
     #creating a dictionary between the x and y array
     dictionary=dict(zip(xVals,yVals))
@@ -181,15 +183,23 @@ def parabolicMinimiser(xVals,yVals):
 
         #finding minimum of lagrange polynomial and appending to xGuess
         x3=0.5*(totalNum/totalDenom)
+
+        #finding the y value corresponding to this x value
+        LagrangeFirst=((x3-xGuess[1])*(x3-xGuess[2])*y0)/((xGuess[0]-xGuess[1])*(xGuess[0]-xGuess[2]))
+        LagrangeSec=((x3-xGuess[0])*(x3-xGuess[2])*y1)/((xGuess[1]-xGuess[0])*(xGuess[1]-xGuess[2]))
+        LagrangeThird=((x3-xGuess[0])*(x3-xGuess[1])*y2)/((xGuess[2]-xGuess[0])*(xGuess[2]-xGuess[1]))
+
+        y3=LagrangeFirst + LagrangeSec + LagrangeThird
+
+        #append the new found y3 value to the y array
+        yVals.append(y3)
+
+        #append new x value to x array and xGuess
+        xVals.append(x3)
+
         xGuess.append(x3)
         print(xGuess)
         #search through xGuess and remove the x value corresponding to the largest y
-        yNew=[]
-        for i in xGuess:
-            yNew.append(dictionary[i])
-        positionMax=yNew.index(max(yNew))
-        xGuess.remove(xGuess[positionMax])
-        print(xGuess)
      
         
     print(x3)
@@ -199,6 +209,8 @@ parabolicMinimiser(E,noDecayProb)
 
 #the issue is that the new value of x3 found does not correspond to a 
 #specific value of y as our x values are not continous and infinite
+
+#to solve this, find the corresponding y value according to the lagrange polynomial
 
 
 
