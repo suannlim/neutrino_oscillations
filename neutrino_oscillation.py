@@ -65,7 +65,7 @@ def noOscProb(E,mixAng,diffSqrMass,L):
         sinVal=(1.267*diffSqrMass*L)/i
         sin1=np.sin(2*mixAng)
         sin2=np.sin(sinVal)
-        prob=1-(sin1**2)*(sin2**2)
+        prob=1-((sin1**2)*(sin2**2))
         probVals.append(prob)
 
     return probVals
@@ -73,8 +73,12 @@ def noOscProb(E,mixAng,diffSqrMass,L):
 #creating an array of neutrino energy values, i take the energy as the midpoint of the bin
 E=np.arange(0.025,10,0.05)
 
+#trying tonys value of E
+newE=np.linspace(0,10-0.05,200)
+
+
 #finding the probability of the neutrino not decaying
-noDecayProb=noOscProb(E,np.pi/4,2.4e-3,295)
+noDecayProb=noOscProb(newE,np.pi/4,2.4e-3,295)
 
 #plotting probability values on a graph
 plt.figure(1)
@@ -82,13 +86,13 @@ plt.title("Probability values wrt neutrino energy")
 plt.plot(E,noDecayProb)
 
 #now we find the oscillated event rate probability by multiplying the simulated data by the
-#probability that the neutrino will oscilalte from a muon neutrino to tau neutrino
+#probability that the neutrino will not oscilalte from a muon neutrino to tau neutrino
 
 
 def oscEventRate(noDecayProb,simData):
     EventRate=[]
     for i in range(len(noDecayProb)):
-        EventRate.append((1-noDecayProb[i])*simData[i])
+        EventRate.append((noDecayProb[i])*simData[i])
     return EventRate
 
 eventRate=oscEventRate(noDecayProb,simData)
@@ -103,7 +107,7 @@ plt.plot(E,eventRate)
 #%%
 #3.3 Likelihood function
 
-def negLogLike(data,mixAng):
+def negLogLike(expdata,simdata,mixAng):
     #create array to store negative Log Likelihood values for varying mix angles
     likelihood=[]
 
@@ -111,26 +115,26 @@ def negLogLike(data,mixAng):
     diffSqrMass=2.4e-3
     L=295
     E=np.arange(0.025,10,0.05)
-
     for i in mixAng:
-        print(i)
         noDecayProb=noOscProb(E,i,diffSqrMass,L)
-        print(noDecayProb)
-        sum=0
+        NLLsum=0
         for j in range(len(noDecayProb)):
-            OscillationEventRate=oscEventRate(noDecayProb,data)
-            m=data[j]
+            OscillationEventRate=oscEventRate(noDecayProb,simdata)
+            m=expdata[j]
             Lamda=OscillationEventRate[j]
-            sum+=Lamda-m+(m*np.log(m/Lamda))
-        likelihood.append(sum)
+            if m==0:
+                NLLsum+=Lamda
+            else:
+                NLLsum+=(Lamda-m+(m*np.log(m/Lamda)))
+        likelihood.append(NLLsum)
 
     return likelihood
 
 #create an array of mixing angle values
 
-mixAng=np.linspace(np.pi/32,np.pi/2,100)
+mixAng=np.linspace(np.pi/32,np.pi/2,200)
 
-likelihoodVals=negLogLike(simData,mixAng)
+likelihoodVals=negLogLike(expData,simData,mixAng)
 
 #plotting the NLL values against the mixing angle to find the approx minimum
 plt.title("Negative log likelihood with varying mixing angle")
@@ -139,8 +143,12 @@ plt.ylabel("Negative Log Likelihood")
 plt.plot(mixAng,likelihoodVals)
 
 
+
+
+
 #%%
 #3.4 Minimisation
+
 
 def parabolicMinimiser(xVals,yVals):
     """
@@ -152,19 +160,21 @@ def parabolicMinimiser(xVals,yVals):
     #create an array to store the points we are considering
     xGuess=[]
 
-
-
     #creating a dictionary between the x and y array
     dictionary=dict(zip(xVals,yVals))
 
-    #append the first 3 points 
-    for i in range(3):
-        xGuess.append(xVals[i])
+    #append the first, middle and last value
+    xGuess.append(xVals[70])
+    xGuess.append(xVals[80])
+    xGuess.append(xVals[90])
     
     #continue iterating until x3 changes by less than 0.001
     diffx3=100
+    prevX = 0
 
-    for x in range(100):
+    while diffx3>0.00000001:
+
+        print(xGuess)
         #find all relevant y values
         y0=dictionary[xGuess[0]]
         y1=dictionary[xGuess[1]]
@@ -177,12 +187,14 @@ def parabolicMinimiser(xVals,yVals):
         denomFirst=(xGuess[2] - xGuess[1])*y0
         denomSec=(xGuess[0] - xGuess[2])*y1
         denomThird=(xGuess[1] - xGuess[0])*y2
-
+        
         totalNum=numFirst+numSec+numThird
         totalDenom=denomFirst+denomSec+denomThird
 
         #finding minimum of lagrange polynomial and appending to xGuess
         x3=0.5*(totalNum/totalDenom)
+        print("found x3: ", x3)
+        diffx3=abs(x3 - prevX)
 
         #finding the y value corresponding to this x value
         LagrangeFirst=((x3-xGuess[1])*(x3-xGuess[2])*y0)/((xGuess[0]-xGuess[1])*(xGuess[0]-xGuess[2]))
@@ -191,32 +203,38 @@ def parabolicMinimiser(xVals,yVals):
 
         y3=LagrangeFirst + LagrangeSec + LagrangeThird
 
-        #append the new found y3 value to the y array
-        yVals.append(y3)
-
-        #append new x value to x array and xGuess
-        xVals.append(x3)
+        #append the new found y3 value to the dictionary
+        dictionary[x3]=y3
 
         xGuess.append(x3)
+        prevX = x3
+        print("Setting prev3 to: ", prevX)
         print(xGuess)
-        #search through xGuess and remove the x value corresponding to the largest y
-     
+        
+        #loop through xGuess to remove the x value that corresponds to the largest y
+        maxY = 0
+        maxX = 0
+        for i in xGuess:
+            if dictionary[i]>maxY:
+                maxY=dictionary[i]
+                maxX=i
+        xGuess.remove(maxX)
+        print(xGuess)
         
     print(x3)
-    return(x3)
-
-parabolicMinimiser(E,noDecayProb)
-
-#the issue is that the new value of x3 found does not correspond to a 
-#specific value of y as our x values are not continous and infinite
-
-#to solve this, find the corresponding y value according to the lagrange polynomial
+    return(x3,y3)
 
 
 
-
-
-
+parabolicMinimiser(mixAng,likelihoodVals)
+x=parabolicMinimiser(mixAng,likelihoodVals)[0]
+y=parabolicMinimiser(mixAng,likelihoodVals)[1]
+#plotting the NLL values against the mixing angle to find the approx minimum
+plt.title("Negative log likelihood with varying mixing angle")
+plt.xlabel("Mixing angle")
+plt.ylabel("Negative Log Likelihood")
+plt.plot(mixAng,likelihoodVals)
+plt.plot(x,y,"x")
 
 
 #%%
