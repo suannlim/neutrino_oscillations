@@ -246,12 +246,6 @@ plt.ylabel("Negative Log Likelihood")
 plt.plot(mixAng,likelihoodVals)
 plt.plot(x,y,"x")
 
-plt.figure("test")
-parabolicMinimiser(E,noDecayProb)
-x1=parabolicMinimiser(E,noDecayProb)[0]
-y1=parabolicMinimiser(E,noDecayProb)[1]
-plt.plot(E,noDecayProb)
-plt.plot(x1,y1,"x")
 
 
 
@@ -266,11 +260,34 @@ minY=parabolicMinimiser(mixAng,likelihoodVals)[1]
 dictionary=parabolicMinimiser(mixAng,likelihoodVals)[2]
 xFinal=parabolicMinimiser(mixAng,likelihoodVals)[3]
 
-#def NLLshifterror(minY,xVals,yVals,dictionary):
+def findNearest(array,value):
+    difference=value-array
+    idx=np.argmin(np.abs(difference))
+    if difference[idx]>0:
+        return(idx,idx+1)
+    if difference[idx]<0:
+        return(idx,idx-1)
+
+
+
+def NLLshifterror(minY,xVals,yVals):
 
     #in order to find the values of x at y+-0.5, use the last lagrange polynomial used
-    #to find the minimum in the minimiser function
-    #newY=minY+0.5
+    #to find the minimum in the minimiser function.
+    #Interpolate between the two nearest Y values
+    newY=minY+0.5
+    y1_idx,y2_idx=findNearest(yVals,newY)
+    y1=yVals[y1_idx]
+    y2=yVals[y2_idx]
+    print(y1,y2)
+    x1=xVals[y1_idx]
+    x2=xVals[y2_idx]
+    print(x1,x2)
+    numerator=newY*(x2-x1) - x2*y1 + x1*y2
+    denominator=y2-y1
+    thetaPlus=numerator/denominator
+
+    return(thetaPlus)
 
 
 
@@ -283,6 +300,7 @@ def NLLgaussianError(xVals,yVals,minX):
     return(sigma)
 
 NLLgaussianError(mixAng,likelihoodVals,minX)
+NLLshifterror(minY,mixAng,likelihoodVals)
 
 
 #%%
@@ -316,7 +334,7 @@ def NLL_varying(expdata,simdata,mixAng,diffSqrMass):
 
     return likelihood
 
-diffSqrMass=np.linspace(1e-3,2.4e-3,200)
+diffSqrMass=np.linspace(1e-3,4.8e-3,200)
 Likelihood_2d=NLL_varying(expData,simData,mixAng,diffSqrMass)
 
 plt.figure("NLL vs mix ang")
@@ -324,12 +342,17 @@ plt.plot(diffSqrMass,Likelihood_2d)
 plt.xlabel("Diff sqr mass")
 plt.ylabel("NLL")
 
-fig = plt.figure()
+fig = plt.figure("2d")
+ax = plt.axes()
+X, Y = np.meshgrid(mixAng, diffSqrMass)
+plt.title("Univariate method for 2d")
+likelihood_countour=NLL_varying(expData,simData,X,Y)
+ax.contour(X, Y, likelihood_countour, 50, cmap='binary')
+
+plt.figure("3d")
+plt.title("Univariate method for 3d")
 ax = plt.axes(projection='3d')
-ax.plot3D(mixAng, diffSqrMass, Likelihood_2d)
-
-
-
+ax.contour3D(X, Y, likelihood_countour, 50, cmap='binary')
     
 
 #%%
