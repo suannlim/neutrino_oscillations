@@ -153,7 +153,7 @@ print(mixAng,likelihoodVals)
 #3.4 Minimisation
 
 #this minimiser is only effective when the approximate positionof the minimum is known
-def parabolicMinimiser(xVals,yVals):
+def parabolicMinimiser(xVals,yVals,initPoint,initPointX):
     """
     Parabolic minimisation takes 3 points(x0,x1,x2) and fits a lagrange polynomial across
     those points. The polynomial minimum can be found to give x3.Keep the
@@ -167,7 +167,11 @@ def parabolicMinimiser(xVals,yVals):
     dictionary=dict(zip(xVals,yVals))
 
     #need to find 3 initial points f(x1),f(x2) and f(x3) such that f(x2) is the lowest point
-    xGuess.append(xVals[10])
+
+    if initPoint==True:
+        xGuess.append(initPointX)
+    else:
+        xGuess.append(xVals[10])
     firstGuess=15
     secGuess=20
     while dictionary[xVals[firstGuess]]>= dictionary[xVals[secGuess]]:
@@ -231,19 +235,22 @@ def parabolicMinimiser(xVals,yVals):
         xGuess.remove(maxX)
 
         print(x3,y3)
-        
-    return(x3,y3,dictionary,xFinal)
+    np.append(xVals,x3)
+    np.append(yVals,y3)
+
+    return(x3,y3,dictionary,xVals,yVals)
 
 
 plt.figure("Minimising Neg log like")
-parabolicMinimiser(mixAng,likelihoodVals)
-x=parabolicMinimiser(mixAng,likelihoodVals)[0]
-y=parabolicMinimiser(mixAng,likelihoodVals)[1]
+xVals=parabolicMinimiser(mixAng,likelihoodVals,False,0)[3]
+yVals=parabolicMinimiser(mixAng,likelihoodVals,False,0)[4]
+x=parabolicMinimiser(mixAng,likelihoodVals,False,0)[0]
+y=parabolicMinimiser(mixAng,likelihoodVals,False,0)[1]
 #plotting the NLL values against the mixing angle to find the approx minimum
 plt.title("Negative log likelihood with varying mixing angle")
 plt.xlabel("Mixing angle")
 plt.ylabel("Negative Log Likelihood")
-plt.plot(mixAng,likelihoodVals)
+plt.plot(xVals,yVals)
 plt.plot(x,y,"x")
 
 
@@ -312,7 +319,8 @@ from mpl_toolkits import mplot3d
 #mix angle and square mass difference
 
 def NLL_varying(expdata,simdata,mixAng,diffSqrMass):
-        #create array to store negative Log Likelihood values for varying mix angles
+    #create array to store negative Log Likelihood values for varying mix angles
+    #this NLL varying works for 2d and 3d as 
     likelihood=[]
 
     #set the constants
@@ -337,8 +345,30 @@ def NLL_varying(expdata,simdata,mixAng,diffSqrMass):
 diffSqrMass=np.linspace(1e-3,4.8e-3,200)
 Likelihood_2d=NLL_varying(expData,simData,mixAng,diffSqrMass)
 
+#finding the minimum using the univariate method means finding the min in one direction and then the other 
+#direction then iterating
+
+def univariateMinimisation(angVals,delmVals,likelihood):
+    #the univariate method finds the minimum in one dimension (given an initial point), uses that minimum
+    #and finds the minimum in the other direction. repeat this iteration and it will eventually converge
+
+    #find first iteration in min theta direction
+    first_x_theta= parabolicMinimiser(angVals,likelihood,False,0)[0]
+
+    #now we use this point as the initial point for the minimisation in delta m direction
+    first_x_delm=parabolicMinimiser(delmVals,likelihood,True,first_x_theta)[0]
+
+    return(first_x_delm)
+
+
+#univariateMinimisation(mixAng,diffSqrMass,Likelihood_2d)
+xdelm=parabolicMinimiser(diffSqrMass,Likelihood_2d,False,0)[0]
+ydelm=parabolicMinimiser(diffSqrMass,Likelihood_2d,False,0)[1]
+
+
 plt.figure("NLL vs mix ang")
 plt.plot(diffSqrMass,Likelihood_2d)
+plt.plot(xdelm,ydelm,"x")
 plt.xlabel("Diff sqr mass")
 plt.ylabel("NLL")
 
@@ -353,7 +383,218 @@ plt.figure("3d")
 plt.title("Univariate method for 3d")
 ax = plt.axes(projection='3d')
 ax.contour3D(X, Y, likelihood_countour, 50, cmap='binary')
+
+
+
+#%%
+diffSqrMass=np.linspace(1e-3,4.8e-3,200)
+mixAng=np.linspace(np.pi/32,np.pi/2,200)
+#iffSqrMass=np.array([2.4e-3])
+
+
+
+#try to rewrite minimiser function so it works for 2d and 3d
+#first have to rewrite NLL function so it works for 2d and 3d
+def NLL(mixAng,diffSqrMass,form='general'):
+    """
+    create array to store negative Log Likelihood values for varying mix angles
+    this NLL varying works for 2d and 3d as 
+    form can take 4 parameters : twodimension,threedimension,singular_theta,singular_delm
+    """
+    likelihood=[]
+
+    #read in the data
+    expData=readData("dataFile.txt")[0]
+    simData=readData("dataFile.txt")[1]
+
+    #set the constants
+    L=295
+    E=np.arange(0.025,10,0.05)
+
+    #if function for singular values of likelihood
+    if form=='twodimension':
+        for i in range(len(mixAng)):
+            #finding the array of probabilities for a specific mix ang (prob vals depend on E)
+            noDecayProb=noOscProb(E,mixAng[i],diffSqrMass[0],L)
+            NLLsum=0
+            OscillationEventRate=oscEventRate(noDecayProb,simData)
+            for j in range(len(noDecayProb)):
+                m=expData[j]
+                Lamda=OscillationEventRate[j]
+                if m==0:
+                    NLLsum+=Lamda
+                else:
+                    NLLsum+=(Lamda-m+(m*np.log(m/Lamda)))
+            likelihood.append(NLLsum)
+    elif form=='threedimension':
+        for i in range(len(mixAng)):
+            #finding the array of probabilities for a specific mix ang (prob vals depend on E)
+            noDecayProb=noOscProb(E,mixAng[i],diffSqrMass[i],L)
+            NLLsum=0
+            OscillationEventRate=oscEventRate(noDecayProb,simData)
+            for j in range(len(noDecayProb)):
+                m=expData[j]
+                Lamda=OscillationEventRate[j]
+                if m==0:
+                    NLLsum+=Lamda
+                else:
+                    NLLsum+=(Lamda-m+(m*np.log(m/Lamda)))
+            likelihood.append(NLLsum)
+    elif form=='singular':
+        noDecayProb=noOscProb(E,mixAng,diffSqrMass,L)
+        NLLsum=0
+        OscillationEventRate=oscEventRate(noDecayProb,simData)
+        for j in range(len(noDecayProb)):
+            m=expData[j]
+            Lamda=OscillationEventRate[j]
+            if m==0:
+                NLLsum+=Lamda
+            else:
+                NLLsum+=(Lamda-m+(m*np.log(m/Lamda)))
+        likelihood = NLLsum
+
+    return likelihood
+
+
+def minimiser_parabolic(func,param):
+    """
+    This function will take the function that wants to be minimised along with the 
+    parameters, should work for 2d and 3d functions
+
+    PARAM MUST BE A 2D ARRAY
+
     
+    """
+    form='singular'
+    mixAng=param[0]
+    diffSqrMass=param[1]
+    #print(len(diffSqrMass))
+    xGuess=[]
+    zen=len(diffSqrMass)
+    xen=len(mixAng)
+    
+    if zen==1: #minimising in theta direction
+        diffSqrMass=diffSqrMass[0]
+        #append initial points
+        xGuess.append(mixAng[10])
+        firstGuess=15
+        secGuess=20
+        while func(mixAng[firstGuess],diffSqrMass,form)>= func(mixAng[secGuess],diffSqrMass,form):
+            firstGuess+=1
+            secGuess+=1
+    
+        xGuess.append(mixAng[firstGuess])
+        xGuess.append(mixAng[secGuess])
+    if xen==1: #minimising in delm direction
+        mixAng=mixAng[0]
+        xGuess.append(diffSqrMass[10])
+        firstGuess=15
+        secGuess=20
+        while func(mixAng,diffSqrMass[firstGuess],form)>= func(mixAng,diffSqrMass[secGuess],form):
+            firstGuess+=1
+            secGuess+=1
+    
+        xGuess.append(diffSqrMass[firstGuess])
+        xGuess.append(diffSqrMass[secGuess])
+        
+
+    #continue iterating until x3 changes by less than 0.001
+    diffx3=100
+    prevX = 0
+
+    while diffx3>0.000001:
+
+        xFinal=xGuess
+
+        #find all relevant y values
+        if zen==1:
+            y0=func(xGuess[0],diffSqrMass,form)
+            y1=func(xGuess[1],diffSqrMass,form)
+            y2=func(xGuess[2],diffSqrMass,form)
+        if xen==1:
+            y0=func(mixAng,xGuess[0],form)
+            y1=func(mixAng,xGuess[1],form)
+            y2=func(mixAng,xGuess[2],form)
+
+
+        #break up calculation
+        numFirst=(xGuess[2]**2 - xGuess[1]**2)*y0
+        numSec=(xGuess[0]**2 - xGuess[2]**2)*y1
+        numThird=(xGuess[1]**2 - xGuess[0]**2)*y2
+        denomFirst=(xGuess[2] - xGuess[1])*y0
+        denomSec=(xGuess[0] - xGuess[2])*y1
+        denomThird=(xGuess[1] - xGuess[0])*y2
+        
+        totalNum=numFirst+numSec+numThird
+        totalDenom=denomFirst+denomSec+denomThird
+
+        #finding minimum of lagrange polynomial and appending to xGuess
+        x3=0.5*(totalNum/totalDenom)
+        diffx3=abs(x3 - prevX)
+
+        if zen==1:
+            y3=func(x3,diffSqrMass,form)
+        if xen==1:
+            y3=func(mixAng,x3,form)
+
+        xGuess.append(x3)
+        prevX = x3
+        
+        #loop through xGuess to remove the x value that corresponds to the largest y
+        maxY = 0
+        maxX = 0
+        for i in xGuess:
+            if zen==1:
+                if func(i,diffSqrMass,form)>maxY:
+                    maxY=func(i,diffSqrMass,form)
+                    maxX=i
+            if xen==1:
+                if func(mixAng,i,form)>maxY:
+                    maxY=func(mixAng,i,form)
+                    maxX=i
+        xGuess.remove(maxX)
+
+
+
+    return(x3,y3)
+
+def univariate(func,param):
+    #first minimise in theta direction, take that point then minimise in mix ang direction
+    #repeat this process 
+    mixAng=param[0]
+    delm=param[1]
+    param=[mixAng,np.array([delm[0]])]
+    
+    for i in range(10):
+        xtheta=minimiser_parabolic(func,param)[0]
+         #putting it into array
+        param=[np.array([xtheta]),delm]
+        xdelm=minimiser_parabolic(func,param)[0]
+        param=[mixAng,np.array([xdelm])]
+    print(NLL(xtheta,xdelm,'singular'))
+    return(xtheta,xdelm)
+
+diffSqrMass=np.linspace(1e-3,4.8e-3,200)
+mixAng=np.linspace(np.pi/32,np.pi/2,200)
+#diffSqrMass=np.array([2.4e-3])
+
+
+
+#x=minimiser_parabolic(NLL,[mixAng,diffSqrMass])[0]
+#y=minimiser_parabolic(NLL,[mixAng,diffSqrMass])[1]
+print(univariate(NLL,[mixAng,diffSqrMass]))
+
+fig = plt.figure("2d")
+ax = plt.axes()
+X, Y = np.meshgrid(mixAng, diffSqrMass)
+NLLvals=NLL(X,Y,'threedimension')
+plt.title("Univariate method for 2d")
+ax.contour(X, Y, NLLvals, 50, cmap='binary')
+
+
+
 
 #%%
 
+
+#%%
