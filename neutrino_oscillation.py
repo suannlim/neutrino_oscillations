@@ -588,7 +588,7 @@ fig = plt.figure("2d")
 ax = plt.axes()
 X, Y = np.meshgrid(mixAng, diffSqrMass)
 NLLvals=NLL(X,Y,'threedimension')
-plt.title("Univariate method for 2d")
+plt.title("Contour plot of likelihood")
 ax.contour(X, Y, NLLvals, 50, cmap='binary')
 
 
