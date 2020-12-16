@@ -1,0 +1,42 @@
+TODO:
+
+1. Make sure that there is a singular file (main) that the demonstrator should 
+    run. This file needs to be very short, and have minimal function definitions 
+    inside. The only functions that are defined in here are the ones that are 
+    being run. So a function defined part_one(...) which outputs all the answers
+    to part 1 is acceptable. This will mean the instructor doesn't have to run
+    any code blocks and can just comment out part_two if he just wants to see 
+    part_one.
+
+    Example:
+
+    part_one(input):
+        stuff = transform(input)
+        output_graph(stuff)
+        final_answer = calculate(stuff)
+        print(final_answer)
+        return final_answer
+
+    part_two(input):
+        stuff = transform2(input)
+        output_graph2(stuff)
+        final_answer = calculate2(stuff)
+        print(final_answer)
+        return final_answer
+
+    part_one(input1)
+    part_two(input2)
+
+2. If possible, different questions/functionality should be split into different 
+    files. So any graph outputting function should be in its own file, separate
+    from any calculation functions. (This is not mandatory though)
+    It will help with code cleanliness.
+
+3. The only thing inside files that are not your main file are
+    function declarations. Do not call any functions inside files that are not
+    main except inside function declarations.
+
+
+comparing the grad and quasi newton method - does second derivative give us
+more information about the physics or efficiency is also very important
+
