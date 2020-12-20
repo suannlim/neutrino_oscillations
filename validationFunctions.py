@@ -3,14 +3,15 @@ This file will contain the functions that provide validations for my function ou
 """
 
 #import relevant libraries
+import numpy as np
 
 
-def xSqr(x,y,z,form):
+def oneDvalidation(x,y,z,form):
     """
     This function will output values of y =x^2 to show that the parabolic minimiser will correctly converge at zero
 
     """
-    return(x**2)
+    return(x**3 +x**2)
 
 def contourFunc(x,y,z,form):
     """

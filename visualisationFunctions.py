@@ -78,7 +78,8 @@ def linePlot(title,xValues,yValues,xlabel,ylabel):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.plot(xValues,yValues)
-
+    plt.grid(True)
+    
     return
 
 def singlePoint(xVal,yVal):

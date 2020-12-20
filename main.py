@@ -41,12 +41,12 @@ def Part3():
     mixAng=np.linspace(np.pi/32,np.pi/2,200)
     #finding likelihood values
     likelihoodVals=minimiser.NLL(mixAng,2.4e-3,1,'theta')
-    vis.linePlot("Likelihood with varying Theta",mixAng,likelihoodVals,"Mixing Angle","Negative Log Like")
+    vis.linePlot("Likelihood with varying Theta",mixAng,likelihoodVals,"Mixing Angle","Negative Log Likelihood")
 
     
     #3.4 Minimise
     thetaMin,likelihoodMin=minimiser.minimiser_parabolic(minimiser.NLL,[mixAng,[2.4e-3],[1]],[0.4,2.4e-3,1],'2d')
-    vis.linePlot("Position of minimum",mixAng,likelihoodVals,"Mixing Angle","Negative Log Like")
+    vis.linePlot("Position of minimum",mixAng,likelihoodVals,"Mixing Angle","Negative Log Likelihood")
     vis.singlePoint(thetaMin,likelihoodMin)
 
     #3.5 Accuracy of Fit Result
@@ -55,6 +55,7 @@ def Part3():
     error.NLLgaussianError('Theta',mixAng,thetaMin)
     #Uncertainty found by shifting the NLL values by 0.5
     error.NLLshiftError(minimiser.NLL,[thetaMin],likelihoodMin,'theta1d')
+
 
 
     return
@@ -69,7 +70,8 @@ def Part4():
 
     #Plot mass vs likelihood
     likelihoodVals=minimiser.NLL(np.pi/4,diffSqrMass,1,'delM')
-    vis.linePlot("Likelihood with varying mass",diffSqrMass,likelihoodVals,"Neutrino mass square difference","Likelihood Values")
+    vis.linePlot("Likelihood with varying mass",diffSqrMass,likelihoodVals,"Neutrino mass square difference/GeV","Likelihood Values")
+    
     
     #minimise using the univariate method
     thetaMin,delMMin,likelihoodMin,path=minimiser.univariate(minimiser.NLL,[mixAng,diffSqrMass,[1]],[0.4,0.001,1],'2d')
@@ -86,7 +88,7 @@ def Part4():
     #Minimising using the Quasi Newton Method
     thetaMin,delMMin,likelihoodMin,path2=minimiser.quasiNewtonMin(minimiser.NLL,[0.4,0.001],1e-4,'2d')
 
-    vis.ContourPath("Contour Plot with Path",[mixAng,diffSqrMass],minimiser.NLL,'Theta','Mass',path,points1,path2)
+    vis.ContourPath("Contour Plot with Path",[mixAng,diffSqrMass],minimiser.NLL,'Mixing Angle/Radians','Difference Square Mass/GeV',path,points1,path2)
 
     #find the error of our estimates
     error.NLLgaussianError('theta',mixAng,thetaMin)
@@ -95,7 +97,7 @@ def Part4():
     error.NLLshiftError(minimiser.NLL,[thetaMin,delMMin],likelihoodMin,'delM2d')
 
     
-    plt.show()
+    
     return
 
 
@@ -108,7 +110,7 @@ def Part5():
     mixAng=np.linspace(np.pi/32,np.pi/2,200)
 
     #Minimising using the univariate method with varying alpha
-    minimiser.univariate(minimiser.NLL,[mixAng,diffSqrMass,alpha],[0.4,0.001,1.1],'3d')
+    uminimiser.univariate(minimiser.NLL,[mixAng,diffSqrMass,alpha],[0.4,0.001,1.1],'3d')
     
     #Minimising using the grad method with varying alpha
     minimiser.gradMin(minimiser.NLL,[0.4,0.001,1.1],1e-4,'3d')
@@ -131,32 +133,40 @@ def validations():
 
     #Validate the parabolic minimiser with test function y=x^2
     x=np.linspace(-10,10,100)
-    minimiser.minimiser_parabolic(validate.xSqr,[x,[1],[1]],[0,1,1],'2d')
+    minx,miny=minimiser.minimiser_parabolic(validate.oneDvalidation,[x,[1],[1]],[3,1,1],'2d')
+    print("The minimum of x^3+x^2 is at", minx, "and the y value is at ", miny)
+
+    vis.linePlot("Validation for 1D",x,validate.oneDvalidation(x,1,1,'1d'),"x","y")
+    vis.singlePoint(minx,miny)
 
     #Validate the Univariate minimiser with test function x^2+y^2
+
     y=np.linspace(-10,10,100)
-    minimiser.univariate(validate.contourFunc,[x,y,1],[1,1,1],'2d')
+    uniX,uniY,uniZ,uniPath=minimiser.univariate(validate.contourFunc,[x,y,1],[10,10,1],'2d')
 
     #Validate the Gradient minimiser with test function x^2 +y^2
-    minimiser.gradMin(validate.contourFunc,[10,10,1],1e-1,'2d')
+    gradX,gradY,gradZ,gradPath=minimiser.gradMin(validate.contourFunc,[10,10,1],1e-1,'2d')
 
     #Validate the Quasi Newton minimiser with test function x^2 +y^2
-    minimiser.quasiNewtonMin(validate.contourFunc,[10,10,1],1e-1,'2d')
+    quasiX,quasiY,quasiZ,quasiPath=minimiser.quasiNewtonMin(validate.contourFunc,[10,10,1],1e-3,'2d')
 
-    z=np.linspace(-10,10,100)
+    vis.ContourPath("2D Validation Contour",[x,y],validate.contourFunc,"x","y",uniPath,gradPath,quasiPath)
+
+    z=np.linspace(-4,4,100)
 
     #Validate the Univaraite minimiser with test function x^2+y^2+z^2
-    minimiser.univariate(validate.threeDim,[x,y,z],[1,1,1],'3d')
+    minimiser.univariate(validate.threeDim,[x,y,z],[10,10,10],'3d')
 
     #Validate the Gradient minimiser with test function x^2+y^2+z^2
-    minimiser.gradMin(validate.threeDim,[20,30,40],1e-2,'3d')
+    minimiser.gradMin(validate.threeDim,[10,10,10],1e-2,'3d')
 
     #Validate the Quasi Newton minimiser with test function x^2+y^2+z^2
-    minimiser.quasiNewtonMin(validate.threeDim,[10,20,10],1e-1,'3d')
+    minimiser.quasiNewtonMin(validate.threeDim,[10,10,10],1e-1,'3d')
 
     return
 
-Part4()
+validations()
+plt.show()
 
 
 

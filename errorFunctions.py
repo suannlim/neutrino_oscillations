@@ -183,7 +183,6 @@ def NLLshiftError(func,minPoint,minNLL,form):
             x1minus=x2minus
             diffminus=x1minus-x0minus
 
-    print(x1plus,x1minus)
     sigma=(x1plus-x1minus)/2
     if form=='theta2d' or form=='theta3d' or form=='theta1d':
         minVal=minPoint[0]

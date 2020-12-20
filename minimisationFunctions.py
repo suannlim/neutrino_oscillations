@@ -744,6 +744,7 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
             delM=newPoint[1][0]
 
             i+=1
+           
      
 
         if dim=='3d':
