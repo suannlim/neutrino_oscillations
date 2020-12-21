@@ -79,7 +79,7 @@ def linePlot(title,xValues,yValues,xlabel,ylabel):
     plt.ylabel(ylabel)
     plt.plot(xValues,yValues)
     plt.grid(True)
-    
+
     return
 
 def singlePoint(xVal,yVal):
@@ -166,4 +166,3 @@ def ContourPath(title,varyingVarVals,func,xlabel,ylabel,points,points1,points2):
     return
     
 
-#also include one to show the contour plot + heat map to include the alpha axis

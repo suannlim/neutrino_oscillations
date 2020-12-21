@@ -56,7 +56,7 @@ def Part3():
     #3.5 Accuracy of Fit Result
 
     #Uncertainty found by approximating our last parabolic estimate as a Gaussian
-    error.NLLgaussianError('Theta',mixAng,thetaMin)
+    error.NLLgaussianError(minimiser.NLL,thetaMin)
     #Uncertainty found by shifting the NLL values by 0.5
     error.NLLshiftError(minimiser.NLL,[thetaMin],likelihoodMin,'theta1d')
 
@@ -77,7 +77,8 @@ def Part4():
     likelihoodVals=minimiser.NLL(np.pi/4,diffSqrMass,1,'delM')
     vis.linePlot("Likelihood with varying mass",diffSqrMass,likelihoodVals,"Neutrino mass square difference/GeV","Likelihood Values")
     
-    print("The results of minimisation will appear as 'Likelihood value', The minimum occurs at [mixing angle, diffrence square mass] ")
+    print("The results of minimisation will appear as 'minimiser name' took '-' iterations, function minimum at '-',\
+    The minimum occurs at [mixing angle, diffrence square mass] ")
 
     #minimise using the univariate method
     thetaMin,delMMin,likelihoodMin,path=minimiser.univariate(minimiser.NLL,[mixAng,diffSqrMass,[1]],[0.4,0.001,1],'2d')
@@ -94,7 +95,8 @@ def Part4():
     #Minimising using the Quasi Newton Method
     thetaMin,delMMin,likelihoodMin,path2=minimiser.quasiNewtonMin(minimiser.NLL,[0.4,0.001],1e-4,'2d')
 
-    vis.ContourPath("Contour Plot with Path",[mixAng,diffSqrMass],minimiser.NLL,'Mixing Angle/Radians','Difference Square Mass/GeV',path,points1,path2)
+    vis.ContourPath("Contour Plot with Path",[mixAng,diffSqrMass],minimiser.NLL,'Mixing Angle/Radians',\
+        'Difference Square Mass/GeV',path,points1,path2)
 
     #find the error of our estimates
     error.NLLshiftError(minimiser.NLL,[thetaMin,delMMin],likelihoodMin,'theta2d')
@@ -115,7 +117,8 @@ def Part5():
     diffSqrMass=np.linspace(1e-3,4.8e-3,200)
     mixAng=np.linspace(np.pi/32,np.pi/2,200)
 
-    print("The results of minimisation will appear as 'Likelihood value', The minimum occurs at [mixing angle, diffrence square mass,alpha] ")
+    print("The results of minimisation will appear as 'minimiser name' took '-' iterations, function minimum at '-'\
+    , The minimum occurs at [mixing angle, diffrence square mass,alpha] ")
 
     #Minimising using the univariate method with varying alpha
     minimiser.univariate(minimiser.NLL,[mixAng,diffSqrMass,alpha],[0.4,0.001,1.1],'3d')
@@ -147,7 +150,7 @@ def validations():
     vis.linePlot("Validation for 1D",x,validate.oneDvalidation(x,1,1,'1d'),"x","y")
     vis.singlePoint(minx,miny)
 
-    print("2D VALIDATIONS")
+    print("2D VALIDATIONS USING x^2 +y^2")
 
     #Validate the Univariate minimiser with test function x^2+y^2
 
@@ -164,7 +167,7 @@ def validations():
 
     z=np.linspace(-12,12,100)
 
-    print("3D VALIDATIONS")
+    print("3D VALIDATIONS USING x^2 + y^2 +z^2")
     #Validate the Univaraite minimiser with test function x^2+y^2+z^2
     minimiser.univariate(validate.threeDim,[x,y,z],[10,10,10],'3d')
 
@@ -184,6 +187,8 @@ if __name__ == '__main__':
     Part5()
     validations()
     plt.show()
+
+    #please close all the graphs once the code has been executed to stop the code from running.
     
 
     

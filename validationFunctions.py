@@ -21,6 +21,9 @@ def contourFunc(x,y,z,form):
     return(x**2 + y**2)
 
 def threeDim(x,y,z,form):
+    """
+    This function will output values of x^3+y^3  + z^3to show that the univariate, gradient and quasi newton minimisers work
+    """
 
     return(x**2 + y**2 + z**2)
 

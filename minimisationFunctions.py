@@ -441,8 +441,8 @@ def minimiser_parabolic(func,param,initPoint,dim):
 
 def univariate(func,param,initPoint,dim):
     """
-    The univariate minimises the function in one paramater, then the other and oscillates between the two (or three depending on dimension) until
-    a local minimum is found
+    The univariate minimises the function in one paramater, then the other and oscillates between the two (or three depending 
+    on dimension) until a local minimum is found
 
     INPUTS:
     func - Function to be minimised 
@@ -536,11 +536,11 @@ def univariate(func,param,initPoint,dim):
 
     print("The univariate method took ", i ,"iterations")
     if dim=='2d':
-        print(func(xtheta,xdelm,1,'singular2d'))
+        print("Function minimum at",func(xtheta,xdelm,1,'singular2d'))
         print("The minimum occurs at",[xtheta,xdelm])
         return(xtheta,xdelm,func(xtheta,xdelm,1,'singular2d'),points)
     if dim=='3d':
-        print(func(xtheta,xdelm,xalpha,'singular3d'))
+        print("Function minimum at",func(xtheta,xdelm,xalpha,'singular3d'))
         print("The minimum occurs at",[xtheta,xdelm,xalpha])
         return(xtheta,xdelm,xalpha,func(xtheta,xdelm,xalpha,'singular3d'),points)
 
@@ -622,11 +622,14 @@ def gradMin(func,initPoint,alpha,dim):
         if dim=='3d':
 
             #find the gradients using the central difference scheme
-            gradTheta=(func((theta+delta),delM/scale1,varAlpha/scale2,'singular3d')-func((theta-delta),delM/scale1,varAlpha/scale2,'singular3d'))/(2*delta)
+            gradTheta=(func((theta+delta),delM/scale1,varAlpha/scale2,'singular3d')-\
+                func((theta-delta),delM/scale1,varAlpha/scale2,'singular3d'))/(2*delta)
             grad.append([gradTheta])
-            graddelM=(func(theta,(delM+delta)/scale1,varAlpha/scale2,'singular3d')-func(theta,(delM-delta)/scale1,varAlpha/scale2,'singular3d'))/(2*delta)
+            graddelM=(func(theta,(delM+delta)/scale1,varAlpha/scale2,'singular3d')-\
+                func(theta,(delM-delta)/scale1,varAlpha/scale2,'singular3d'))/(2*delta)
             grad.append([graddelM])
-            gradAlpha=(func(theta,delM/scale1,(varAlpha+delta)/scale2,'singular3d')-func(theta,delM/scale1,(varAlpha-delta)/scale2,'singular3d'))/(2*delta)
+            gradAlpha=(func(theta,delM/scale1,(varAlpha+delta)/scale2,'singular3d')-\
+                func(theta,delM/scale1,(varAlpha-delta)/scale2,'singular3d'))/(2*delta)
             grad.append([gradAlpha])
             grad=np.array(grad)
 
@@ -636,14 +639,16 @@ def gradMin(func,initPoint,alpha,dim):
             j=1
             #this while loop checks that the new point is lower than the old point, if not reduce alpha
             
-            while func(xNew[0][0],xNew[1][0]/scale1,xNew[2][0]/scale2,'singular3d')>func(theta,delM/scale1,varAlpha/scale2,'singular3d'):
+            while func(xNew[0][0],xNew[1][0]/scale1,xNew[2][0]/scale2,'singular3d')>\
+                func(theta,delM/scale1,varAlpha/scale2,'singular3d'):
                 newAlpha=alpha-(j*alpha*1e-1)
                 xNew=np.array([[theta],[delM],[varAlpha]])-(newAlpha*grad)
                 j+=1
             
             #finding the difference between last and new point
             old=[[theta],[delM],[varAlpha]]
-            diff=abs(func(xNew[0][0],xNew[1][0]/scale1,xNew[2][0]/scale2,'singular3d') -func(theta,delM/scale1,varAlpha/scale2,'singular3d'))
+            diff=abs(func(xNew[0][0],xNew[1][0]/scale1,xNew[2][0]/scale2,'singular3d') \
+                -func(theta,delM/scale1,varAlpha/scale2,'singular3d'))
 
             #replacing the vector with the new points
             theta=xNew[0][0]    
@@ -659,18 +664,18 @@ def gradMin(func,initPoint,alpha,dim):
 
     print("The gradient method took ", i , "iterations")
     if dim=='2d':
-        print(func(theta,delM,1,'singular2d'))
+        print("Function minimum at",func(theta,delM,1,'singular2d'))
         print("The minimum occurs at", [theta,delM])
         return(theta,delM,func(theta,delM,1,'singular2d'),points)
     if dim=='3d':
-        print(func(theta,delM,varAlpha,'singular3d'))
+        print("Function minimum at",func(theta,delM,varAlpha,'singular3d'))
         print("The minimum occurs at", [theta,delM,varAlpha])
         return(theta,delM,varAlpha,func(theta,delM,varAlpha,'singular3d'))
 
 def quasiNewtonMin(func,initPoint,alpha,dim):
     """
-    The Quasi Newton minimiser is more efficient than the gradient method as it scales the gradient by the approximation
-    of the inverse hessian
+    The Quasi Newton minimiser is more efficient than the gradient method as it 
+    scales the gradient by the approximation of the inverse hessian
 
     INPUTS:
     func - Function to be minimised
@@ -703,7 +708,8 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
     i=0
 
 
-    #Find the scaling ratio such that the initial points always match the magnitude of the first dimension
+    #Find the scaling ratio such that the initial points always match the 
+    #magnitude of the first dimension
     scale1=theta/delM
     delM=delM*scale1
     if dim=='3d':
@@ -718,8 +724,10 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
             points.append([theta,delM/scale1])
 
             #find gradient using central difference approximation
-            gradTheta=(func((theta+delta),delM/scale1,1,'singular2d')-func((theta-delta),delM/scale1,1,'singular2d'))/(2*delta)
-            graddelM=(func(theta,(delM+delta)/scale1,1,'singular2d')-func(theta,(delM-delta)/scale1,1,'singular2d'))/(2*delta)
+            gradTheta=(func((theta+delta),delM/scale1,1,'singular2d')-\
+                func((theta-delta),delM/scale1,1,'singular2d'))/(2*delta)
+            graddelM=(func(theta,(delM+delta)/scale1,1,'singular2d')-\
+                func(theta,(delM-delta)/scale1,1,'singular2d'))/(2*delta)
             grad=np.array([[gradTheta],[graddelM]])
 
             #If condition to find approximation of inverse hessian on first and successive loops
@@ -727,7 +735,8 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
                 G=np.identity(2)
             else:
                 outerProd=np.outer(xdelta,xdelta)
-                G=G + (outerProd)*(1/np.dot(gamma.transpose(),xdelta)) - (np.matmul(G,np.matmul(outerProd,G)))*(1/np.dot(gamma.transpose(),np.matmul(G,gamma)))
+                G=G + (outerProd)*(1/np.dot(gamma.transpose(),xdelta)) - \
+                    (np.matmul(G,np.matmul(outerProd,G)))*(1/np.dot(gamma.transpose(),np.matmul(G,gamma)))
             
             #Finding xdelta (diff between points) to calculate inverse hessian approx. on next loop
             old=np.array([[theta],[delM]])
@@ -735,13 +744,16 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
             xdelta=newPoint - old
 
             #Calculating difference between old and new grad to find gamma to calculate inverse hessian approx on next loop
-            gradThetaNew=(func((newPoint[0][0]+delta),newPoint[1][0]/scale1,1,'singular2d')-func((newPoint[0][0]-delta),newPoint[1][0]/scale1,1,'singular2d'))/(2*delta)
-            graddelMNew=(func(newPoint[0][0],(newPoint[1][0]+delta)/scale1,1,'singular2d')-func(newPoint[0][0],(newPoint[1][0]-delta)/scale1,1,'singular2d'))/(2*delta)
+            gradThetaNew=(func((newPoint[0][0]+delta),newPoint[1][0]/scale1,1,'singular2d')-\
+                func((newPoint[0][0]-delta),newPoint[1][0]/scale1,1,'singular2d'))/(2*delta)
+            graddelMNew=(func(newPoint[0][0],(newPoint[1][0]+delta)/scale1,1,'singular2d')-\
+                func(newPoint[0][0],(newPoint[1][0]-delta)/scale1,1,'singular2d'))/(2*delta)
             newGrad=np.array([[gradThetaNew],[graddelMNew]])
             gamma=newGrad-grad
 
             #Finding the difference between the old and new function
-            diff =abs(func(newPoint[0][0],newPoint[1][0]/scale1,1,'singular2d') - func(theta,delM/scale1,1,'singular2d'))
+            diff =abs(func(newPoint[0][0],newPoint[1][0]/scale1,1,'singular2d') - \
+                func(theta,delM/scale1,1,'singular2d'))
 
             #Setting the new points
             theta=newPoint[0][0]
@@ -753,9 +765,12 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
 
         if dim=='3d':
             #find grad using central difference approximation
-            gradTheta=(func((theta+delta),delM/scale1,varAlpha/scale2,'singular3d')-func((theta-delta),delM/scale1,varAlpha/scale2,'singular3d'))/(2*delta)
-            graddelM=(func(theta,(delM+delta)/scale1,varAlpha/scale2,'singular3d')-func(theta,(delM-delta)/scale1,varAlpha/scale2,'singular3d'))/(2*delta)
-            gradAlpha=(func(theta,delM/scale1,(varAlpha+delta)/scale2,'singular3d')-func(theta,delM/scale1,(varAlpha-delta)/scale2,'singular3d'))/(2*delta)
+            gradTheta=(func((theta+delta),delM/scale1,varAlpha/scale2,'singular3d')-\
+                func((theta-delta),delM/scale1,varAlpha/scale2,'singular3d'))/(2*delta)
+            graddelM=(func(theta,(delM+delta)/scale1,varAlpha/scale2,'singular3d')-\
+                func(theta,(delM-delta)/scale1,varAlpha/scale2,'singular3d'))/(2*delta)
+            gradAlpha=(func(theta,delM/scale1,(varAlpha+delta)/scale2,'singular3d')-\
+                func(theta,delM/scale1,(varAlpha-delta)/scale2,'singular3d'))/(2*delta)
             grad=np.array([[gradTheta],[graddelM],[gradAlpha]])
 
             #If condition to find approximation of inverse hessian on first and successive loops
@@ -763,7 +778,8 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
                 G=np.identity(3)
             else:
                 outerProd=np.outer(xdelta,xdelta)
-                G=G + (outerProd)*(1/np.dot(gamma.transpose(),xdelta)) - (np.matmul(G,np.matmul(outerProd,G)))*(1/np.dot(gamma.transpose(),np.matmul(G,gamma)))
+                G=G + (outerProd)*(1/np.dot(gamma.transpose(),xdelta)) - \
+                    (np.matmul(G,np.matmul(outerProd,G)))*(1/np.dot(gamma.transpose(),np.matmul(G,gamma)))
 
             #Finding xdelta (diff between points) to calculate inverse hessian approx. on next loop
             old=np.array([[theta],[delM],[varAlpha]])
@@ -771,14 +787,18 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
             xdelta=newPoint - old
 
             #Calculating difference between old and new grad to find gamma to calculate inverse hessian approx on next loop
-            gradThetaNew=(func((newPoint[0][0]+delta),newPoint[1][0]/scale1,newPoint[2][0]/scale2,'singular3d')-func((newPoint[0][0]-delta),newPoint[1][0]/scale1,newPoint[2][0]/scale2,'singular3d'))/(2*delta)
-            graddelMNew=(func(newPoint[0][0],(newPoint[1][0]+delta)/scale1,newPoint[2][0]/scale2,'singular3d')-func(newPoint[0][0],(newPoint[1][0]-delta)/scale1,newPoint[2][0]/scale2,'singular3d'))/(2*delta)
-            gradAlphaNew=(func(newPoint[0][0],newPoint[1][0]/scale1,(newPoint[2][0]+delta)/scale2,'singular3d')-func(newPoint[0][0],newPoint[1][0]/scale1,(newPoint[2][0]-delta)/scale2,'singular3d'))/(2*delta)
+            gradThetaNew=(func((newPoint[0][0]+delta),newPoint[1][0]/scale1,newPoint[2][0]/scale2,'singular3d')-\
+                func((newPoint[0][0]-delta),newPoint[1][0]/scale1,newPoint[2][0]/scale2,'singular3d'))/(2*delta)
+            graddelMNew=(func(newPoint[0][0],(newPoint[1][0]+delta)/scale1,newPoint[2][0]/scale2,'singular3d')-\
+                func(newPoint[0][0],(newPoint[1][0]-delta)/scale1,newPoint[2][0]/scale2,'singular3d'))/(2*delta)
+            gradAlphaNew=(func(newPoint[0][0],newPoint[1][0]/scale1,(newPoint[2][0]+delta)/scale2,'singular3d')-\
+                func(newPoint[0][0],newPoint[1][0]/scale1,(newPoint[2][0]-delta)/scale2,'singular3d'))/(2*delta)
             newGrad=np.array([[gradThetaNew],[graddelMNew],[gradAlphaNew]])
             gamma=newGrad-grad
 
             #Finding the difference between the old and new function
-            diff =abs(func(newPoint[0][0],newPoint[1][0]/scale1,newPoint[2][0]/scale2,'singular3d') - func(theta,delM/scale1,varAlpha/scale2,'singular3d'))
+            diff =abs(func(newPoint[0][0],newPoint[1][0]/scale1,newPoint[2][0]/scale2,'singular3d') - \
+                func(theta,delM/scale1,varAlpha/scale2,'singular3d'))
 
             #Setting the new points
             theta=newPoint[0][0]
@@ -796,11 +816,11 @@ def quasiNewtonMin(func,initPoint,alpha,dim):
 
     print("The QuasiNewton method took ", i, "iterations")
     if dim=='2d':
-        print(func(theta,delM,1,'singular2d'))
+        print("Function minimum at", func(theta,delM,1,'singular2d'))
         print("The minimum occurs at",[theta,delM])
         return(theta,delM,func(theta,delM,1,'singular2d'),points)
     if dim=='3d':
-        print(func(theta,delM,varAlpha,'singular3d'))
+        print("Function minimum at",func(theta,delM,varAlpha,'singular3d'))
         print("The minimum occurs at", [theta,delM,varAlpha])
         return(theta,delM,varAlpha,func(theta,delM,varAlpha,'singular3d'))
 
