@@ -166,4 +166,4 @@ ContourPath(title,varyingVarVals,func,xlabel,ylabel,points,points1,points2)
 
 ## Acknowledgments
 
-* Thank you to our lecturers for providing us this coursework and my demonstrators who were very patient with answering all my queries. 
+* Thank you to my lecturers for providing us this coursework and my demonstrators who were very patient with answering all my queries. 

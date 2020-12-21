@@ -193,6 +193,8 @@ def NLL(mixAng,diffSqrMass,alpha,form='general'):
             for j in range(len(noDecayProb)):
                 m=expData[j]
                 Lamda=OscillationEventRate[j]
+                if Lamda==0:
+                    continue
                 if m==0:
                     NLLsum+=Lamda
                 else:
@@ -255,6 +257,8 @@ def NLL(mixAng,diffSqrMass,alpha,form='general'):
         for j in range(len(noDecayProb)):
             m=expData[j]
             Lamda=OscillationEventRate[j]
+            if Lamda==0:
+                continue
             if m==0:
                 NLLsum+=Lamda
             else:
